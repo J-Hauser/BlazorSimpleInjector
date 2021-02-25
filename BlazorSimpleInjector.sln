@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31005.135
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorSimpleInjector", "BlazorSimpleInjector\BlazorSimpleInjector.csproj", "{C0C14978-133F-4D03-8210-0DFD583D87FA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C0C14978-133F-4D03-8210-0DFD583D87FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0C14978-133F-4D03-8210-0DFD583D87FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0C14978-133F-4D03-8210-0DFD583D87FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0C14978-133F-4D03-8210-0DFD583D87FA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C1E19017-6E51-4B87-833A-02326F664525}
+	EndGlobalSection
+EndGlobal
