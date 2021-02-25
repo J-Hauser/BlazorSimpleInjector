@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using SimpleInjector;
 using System;
 using System.Collections.Generic;
@@ -17,7 +18,7 @@ where TRequest : IRequest<TModel, TResult>
         public TestRequestHandlerComposite(IEnumerable<IRequestHandler<TRequest, TResult, TModel>> requestHandlers)
         {
             Debugger.Break();
-            // requestHandlers NavigationManager is not initialized.
+            // testhandler1 NavigationManager is not initialized and authState in second handler is null.
             _requestHandlers = requestHandlers;
         }
 
@@ -32,6 +33,36 @@ where TRequest : IRequest<TModel, TResult>
     public class TestModel
     {
         public string SomeProperty { get; set; }
+    }
+
+    public interface IUserInfoService
+    {
+        Task<string> GetUserName();
+    }
+
+    public class UserInfoService : IUserInfoService
+    {
+        private readonly AuthenticationStateProvider _authenticationStateProvider;
+
+        public UserInfoService(AuthenticationStateProvider authenticationStateProvider)
+        {
+            _authenticationStateProvider = authenticationStateProvider;
+        }
+
+        public Task<string> GetUserName()
+        {
+            return GetClaimValue("USERNAME");
+        }
+
+        private async Task<AuthenticationState> GetAuthenticationState()
+        {
+            return await _authenticationStateProvider.GetAuthenticationStateAsync();
+        }
+
+        private async Task<string> GetClaimValue(string claim)
+        {
+            return (await GetAuthenticationState()).User?.FindFirst(claim)?.Value ?? "anonymous";
+        }
     }
 
     public interface INavigationManager
@@ -104,17 +135,17 @@ where TRequest : IRequest<TModel, TResult>
 
     public class TestRequestHandler2 : IRequestHandler<Request<TestModel, Result<TestModel>>, Result<TestModel>, TestModel>
     {
-        private readonly INavigationManager _navigationManager;
+        private readonly IUserInfoService _userInfoService;
 
-        public TestRequestHandler2(INavigationManager navigationManager)
+        public TestRequestHandler2(IUserInfoService userInfoService)
         {
-            _navigationManager = navigationManager;
+            _userInfoService = userInfoService;
         }
 
-        public Task<Result<TestModel>> Handle(Request<TestModel, Result<TestModel>> request)
+        public async Task<Result<TestModel>> Handle(Request<TestModel, Result<TestModel>> request)
         {
-            _navigationManager.NavigateTo(request.Model.SomeProperty, true);
-            return Task.FromResult(request.CreateResult());
+            var data = await _userInfoService.GetUserName();
+            return request.CreateResult();
         }
     }
 
