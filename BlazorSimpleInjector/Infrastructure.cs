@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using SimpleInjector;
+using SimpleInjector.Lifestyles;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -103,6 +104,14 @@ where TRequest : IRequest<TModel, TResult>
         public Task<TResult> Handle<TResult, TModel>(IRequest<TModel, TResult> request) where TResult : IResult<TModel>
         {
             var desiredType = typeof(IRequestHandler<,,>).MakeGenericType(request.GetType(), typeof(TResult), typeof(TModel));
+            
+            //does not work
+            //using (AsyncScopedLifestyle.BeginScope(_container))
+            //{
+            //    IEnumerable<dynamic> handlers = _container.GetAllInstances(desiredType);
+            //}
+
+            //composite does not work
             dynamic handler = _container.GetInstance(desiredType);
             return handler.Handle((dynamic)request);
         }
