@@ -66,6 +66,8 @@ namespace BlazorSimpleInjector
             container.Register(typeof(IRequestHandler<,,>), typeof(TestRequestHandlerComposite<,,>));
             container.Register<INavigationManager, BlazorNavigationManager>();
             container.Register<IUserInfoService, UserInfoService>();
+            container.Register(typeof(TestRequestHandler));
+            container.Register(typeof(TestRequestHandler2));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
