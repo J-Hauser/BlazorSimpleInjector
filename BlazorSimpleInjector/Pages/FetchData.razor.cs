@@ -16,7 +16,7 @@ namespace BlazorSimpleInjector.Pages
             TestRequestHandler2 testRequestHandler2
             , IRequestHandler<Request<Bar, Result<Bar>>, Result<Bar>, Bar> decorated,
             TestRequestHandlerComposite<Request<Foo, Result<Foo>>, Result<Foo>, Foo> composite,
-            SimpleInjectorEventHandlerScopeProviderFactory handlerFactory,
+            SimpleInjectorEventHandlerScopeProvider handlerFactory,
             Container container)
         {
             _requestHandler = requestHandler;
@@ -33,7 +33,7 @@ namespace BlazorSimpleInjector.Pages
         private readonly TestRequestHandler2 _testRequestHandler2;
         private readonly IRequestHandler<Request<Bar,Result<Bar>>,Result<Bar>,Bar> _decorated;
         private readonly TestRequestHandlerComposite<Request<Foo, Result<Foo>>, Result<Foo>, Foo> _composite;
-        private readonly SimpleInjectorEventHandlerScopeProviderFactory _handlerFactory;
+        private readonly SimpleInjectorEventHandlerScopeProvider _handlerFactory;
         private readonly Container _container;
 
         async Task Navigate()
@@ -61,7 +61,7 @@ namespace BlazorSimpleInjector.Pages
 
             return shouldAwaitTask ?
                 CallStateHasChangedOnAsyncCompletion(task) :
-                Task.CompletedTask;  
+                Task.CompletedTask;
         }
 
         private async Task CallStateHasChangedOnAsyncCompletion(Task task)

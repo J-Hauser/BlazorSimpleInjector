@@ -66,7 +66,7 @@ namespace BlazorSimpleInjector
             container.Collection.Register<IRequestHandler<Request<Foo, Result<Foo>>, Result<Foo>, Foo>>(new[] { GetType().Assembly },Lifestyle.Scoped);
             container.Register<IRequestHandler<Request<Foo, Result<Foo>>, Result<Foo>, Foo>,TestRequestHandlerComposite<Request<Foo, Result<Foo>>, Result<Foo>, Foo>>(Lifestyle.Scoped);
             container.Register<IRequestHandler<Request<Bar,Result<Bar>>,Result<Bar>,Bar>,Decoratee>(Lifestyle.Scoped);
-            container.RegisterDecorator<IRequestHandler<Request<Bar, Result<Bar>>, Result<Bar>, Bar>, TestRequestHandlerDecorator<Bar>>(Lifestyle.Scoped);
+            //container.RegisterDecorator(typeof(IRequestHandler<,,>), typeof(TestRequestHandlerDecorator<>));
             container.Register<INavigationManager, BlazorNavigationManager>(Lifestyle.Scoped);
             container.Register<IUserInfoService, UserInfoService>(Lifestyle.Scoped);
             container.Register<TestRequestHandler>(Lifestyle.Scoped);
@@ -115,7 +115,6 @@ namespace BlazorSimpleInjector
             options.Services.AddScoped<ScopeAccessor>();
             options.Services.AddScoped<IComponentActivator, SimpleInjectorComponentActivator>();
             options.Services.AddScoped<SimpleInjectorEventHandlerScopeProvider>();
-            options.Services.AddScoped<SimpleInjectorEventHandlerScopeProviderFactory>();
 
             // HACK: This internal ComponentHub type needs to be added for the
             // SimpleInjectorBlazorHubActivator to work.
@@ -177,30 +176,15 @@ namespace BlazorSimpleInjector
         public IServiceScope Scope { get; set; }
     }
     
-    public class SimpleInjectorEventHandlerScopeProviderFactory
-    {
-        private readonly IServiceProvider _serviceScope;
-
-        public SimpleInjectorEventHandlerScopeProviderFactory( IServiceProvider serviceScope)
-        {
-            _serviceScope = serviceScope;
-        }
-
-        public void ApplyScope()
-        {
-            _serviceScope.GetService<SimpleInjectorEventHandlerScopeProvider>().ApplyScope();
-        }
-    }
-
     public class SimpleInjectorEventHandlerScopeProvider
     {
-        private readonly Container _container;
         private readonly IServiceProvider _serviceScope;
+        private readonly Container _container;
 
-        public SimpleInjectorEventHandlerScopeProvider(Container container, IServiceProvider serviceScope)
+        public SimpleInjectorEventHandlerScopeProvider( IServiceProvider serviceScope, Container container)
         {
-            _container = container;
             _serviceScope = serviceScope;
+            _container = container;
         }
 
         public void ApplyScope()

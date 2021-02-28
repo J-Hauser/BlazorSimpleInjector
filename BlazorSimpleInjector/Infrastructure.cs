@@ -19,7 +19,7 @@ where TRequest : IRequest<TModel, TResult>
 
         public TestRequestHandlerComposite(IEnumerable<IRequestHandler<TRequest, TResult, TModel>> requestHandlers)
         {
-            Debugger.Break();
+            //Debugger.Break();
             // testhandler1 NavigationManager is not initialized and authState in second handler is null.
             _requestHandlers = requestHandlers;
         }
