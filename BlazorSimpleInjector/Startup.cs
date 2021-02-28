@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using BlazorSimpleInjector.Pages;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
@@ -61,13 +62,16 @@ namespace BlazorSimpleInjector
 
         private void InitializeContainer()
         {
-            container.Register<IRequestProcessor, RequestProcessor>(); 
-            container.Collection.Register(typeof(IRequestHandler<,,>),GetType().Assembly);
-            container.Register(typeof(IRequestHandler<,,>), typeof(TestRequestHandlerComposite<,,>));
-            container.Register<INavigationManager, BlazorNavigationManager>();
-            container.Register<IUserInfoService, UserInfoService>();
-            container.Register(typeof(TestRequestHandler));
-            container.Register(typeof(TestRequestHandler2));
+            container.Register<IRequestProcessor, RequestProcessor>(Lifestyle.Scoped);
+            container.Collection.Register<IRequestHandler<Request<Foo, Result<Foo>>, Result<Foo>, Foo>>(new[] { GetType().Assembly },Lifestyle.Scoped);
+            container.Register<IRequestHandler<Request<Foo, Result<Foo>>, Result<Foo>, Foo>,TestRequestHandlerComposite<Request<Foo, Result<Foo>>, Result<Foo>, Foo>>(Lifestyle.Scoped);
+            container.Register<IRequestHandler<Request<Bar,Result<Bar>>,Result<Bar>,Bar>,Decoratee>(Lifestyle.Scoped);
+            container.RegisterDecorator<IRequestHandler<Request<Bar, Result<Bar>>, Result<Bar>, Bar>, TestRequestHandlerDecorator<Bar>>(Lifestyle.Scoped);
+            container.Register<INavigationManager, BlazorNavigationManager>(Lifestyle.Scoped);
+            container.Register<IUserInfoService, UserInfoService>(Lifestyle.Scoped);
+            container.Register<TestRequestHandler>(Lifestyle.Scoped);
+            container.Register<TestRequestHandler2>(Lifestyle.Scoped);
+            container.Register<TestRequestHandlerComposite<Request<Foo, Result<Foo>>, Result<Foo>, Foo>>(Lifestyle.Scoped);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -110,6 +114,8 @@ namespace BlazorSimpleInjector
 
             options.Services.AddScoped<ScopeAccessor>();
             options.Services.AddScoped<IComponentActivator, SimpleInjectorComponentActivator>();
+            options.Services.AddScoped<SimpleInjectorEventHandlerScopeProvider>();
+            options.Services.AddScoped<SimpleInjectorEventHandlerScopeProviderFactory>();
 
             // HACK: This internal ComponentHub type needs to be added for the
             // SimpleInjectorBlazorHubActivator to work.
@@ -169,6 +175,38 @@ namespace BlazorSimpleInjector
     public sealed class ServiceScopeAccessor
     {
         public IServiceScope Scope { get; set; }
+    }
+    
+    public class SimpleInjectorEventHandlerScopeProviderFactory
+    {
+        private readonly IServiceProvider _serviceScope;
+
+        public SimpleInjectorEventHandlerScopeProviderFactory( IServiceProvider serviceScope)
+        {
+            _serviceScope = serviceScope;
+        }
+
+        public void ApplyScope()
+        {
+            _serviceScope.GetService<SimpleInjectorEventHandlerScopeProvider>().ApplyScope();
+        }
+    }
+
+    public class SimpleInjectorEventHandlerScopeProvider
+    {
+        private readonly Container _container;
+        private readonly IServiceProvider _serviceScope;
+
+        public SimpleInjectorEventHandlerScopeProvider(Container container, IServiceProvider serviceScope)
+        {
+            _container = container;
+            _serviceScope = serviceScope;
+        }
+
+        public void ApplyScope()
+        {
+            _container.ApplyServiceScope(_serviceScope);
+        }
     }
 
     public sealed class SimpleInjectorComponentActivator : IComponentActivator

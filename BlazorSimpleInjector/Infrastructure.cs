@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.DependencyInjection;
 using SimpleInjector;
 using SimpleInjector.Lifestyles;
 using System;
@@ -31,9 +32,14 @@ where TRequest : IRequest<TModel, TResult>
         }
     }
 
-    public class TestModel
+    public class Foo
     {
         public string SomeProperty { get; set; }
+    }
+
+    public class Bar
+    {
+
     }
 
     public interface IUserInfoService
@@ -104,7 +110,6 @@ where TRequest : IRequest<TModel, TResult>
         public Task<TResult> Handle<TResult, TModel>(IRequest<TModel, TResult> request) where TResult : IResult<TModel>
         {
             var desiredType = typeof(IRequestHandler<,,>).MakeGenericType(request.GetType(), typeof(TResult), typeof(TModel));
-            
             //does not work
             //using (AsyncScopedLifestyle.BeginScope(_container))
             //{
@@ -124,9 +129,38 @@ where TRequest : IRequest<TModel, TResult>
         Task<TResult> Handle(TRequest request);
     }
 
+    public class TestRequestHandlerDecorator<T> : IRequestHandler<Request<T, Result<T>>, Result<T>, T>
+    {
+        public TestRequestHandlerDecorator(IRequestHandler<Request<T, Result<T>>, Result<T>, T> decoratee)
+        {
+            Decoratee = decoratee;
+        }
 
+        public IRequestHandler<Request<T, Result<T>>, Result<T>, T> Decoratee { get; }
 
-    public class TestRequestHandler : IRequestHandler<Request<TestModel, Result<TestModel>>, Result<TestModel>, TestModel>
+        public Task<Result<T>> Handle(Request<T, Result<T>> request)
+        {
+            return Decoratee.Handle(request);
+        }
+    }
+
+    public class Decoratee : IRequestHandler<Request<Bar, Result<Bar>>, Result<Bar>, Bar>
+    {
+        private readonly INavigationManager _navigationManager;
+
+        public Decoratee(INavigationManager navigationManager)
+        {
+            _navigationManager = navigationManager;
+        }
+
+        public Task<Result<Bar>> Handle(Request<Bar, Result<Bar>> request)
+        {
+            _navigationManager.NavigateTo("somewhere over the rainbow", true);
+            return Task.FromResult(request.CreateResult());
+        }
+    }
+
+    public class TestRequestHandler : IRequestHandler<Request<Foo, Result<Foo>>, Result<Foo>, Foo>
     {
         private readonly INavigationManager _navigationManager;
 
@@ -135,14 +169,14 @@ where TRequest : IRequest<TModel, TResult>
             _navigationManager = navigationManager;
         }
 
-        public Task<Result<TestModel>> Handle(Request<TestModel, Result<TestModel>> request)
+        public Task<Result<Foo>> Handle(Request<Foo, Result<Foo>> request)
         {
             _navigationManager.NavigateTo(request.Model.SomeProperty,true);
             return Task.FromResult(request.CreateResult());
         }
     }
 
-    public class TestRequestHandler2 : IRequestHandler<Request<TestModel, Result<TestModel>>, Result<TestModel>, TestModel>
+    public class TestRequestHandler2 : IRequestHandler<Request<Foo, Result<Foo>>, Result<Foo>, Foo>
     {
         private readonly IUserInfoService _userInfoService;
 
@@ -151,7 +185,7 @@ where TRequest : IRequest<TModel, TResult>
             _userInfoService = userInfoService;
         }
 
-        public async Task<Result<TestModel>> Handle(Request<TestModel, Result<TestModel>> request)
+        public async Task<Result<Foo>> Handle(Request<Foo, Result<Foo>> request)
         {
             var data = await _userInfoService.GetUserName();
             return request.CreateResult();
