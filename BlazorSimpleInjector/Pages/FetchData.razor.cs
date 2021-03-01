@@ -1,55 +1,21 @@
-﻿using BlazorSimpleInjector.Data;
-using Microsoft.AspNetCore.Components;
-using SimpleInjector;
-using SimpleInjector.Lifestyles;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Microsoft.AspNetCore.Components;
 using System.Threading.Tasks;
 
 namespace BlazorSimpleInjector.Pages
 {
-    public partial class FetchData : IHandleEvent
+    public class BaseComponent : ComponentBase, IHandleEvent
     {
-        public FetchData(IRequestProcessor requestHandler,
-            TestRequestHandler testRequestHandler,
-            TestRequestHandler2 testRequestHandler2
-            , IRequestHandler<Request<Bar, Result<Bar>>, Result<Bar>, Bar> decorated,
-            TestRequestHandlerComposite<Request<Foo, Result<Foo>>, Result<Foo>, Foo> composite,
-            SimpleInjectorEventHandlerScopeProvider handlerFactory,
-            Container container)
+        public BaseComponent(SimpleInjectorEventHandlerScopeProvider scopeProvider)
         {
-            _requestHandler = requestHandler;
-            _testRequestHandler = testRequestHandler;
-            _testRequestHandler2 = testRequestHandler2;
-            _decorated = decorated;
-            _composite = composite;
-            _handlerFactory = handlerFactory;
-            _container = container;
+            _scopeProvider = scopeProvider;
         }
 
-        private readonly IRequestProcessor _requestHandler;
-        private readonly TestRequestHandler _testRequestHandler;
-        private readonly TestRequestHandler2 _testRequestHandler2;
-        private readonly IRequestHandler<Request<Bar,Result<Bar>>,Result<Bar>,Bar> _decorated;
-        private readonly TestRequestHandlerComposite<Request<Foo, Result<Foo>>, Result<Foo>, Foo> _composite;
-        private readonly SimpleInjectorEventHandlerScopeProvider _handlerFactory;
-        private readonly Container _container;
-
-        async Task Navigate()
-        {
-            await _requestHandler.Handle(new Request<Foo, Result<Foo>>
-            {
-                Model = new Foo()
-                {
-                    SomeProperty = "test"
-                }
-            });
-        }
+        private readonly SimpleInjectorEventHandlerScopeProvider _scopeProvider;
 
         Task IHandleEvent.HandleEventAsync(EventCallbackWorkItem callback, object arg)
         {
-            _handlerFactory.ApplyScope();
+            _scopeProvider.ApplyScope(); //<-- here
+
             var task = callback.InvokeAsync(arg);
             var shouldAwaitTask = task.Status != TaskStatus.RanToCompletion &&
                 task.Status != TaskStatus.Canceled;
@@ -82,6 +48,28 @@ namespace BlazorSimpleInjector.Pages
             }
 
             StateHasChanged();
+        }
+    }
+
+    public partial class FetchData : BaseComponent
+    {
+        public FetchData(IRequestProcessor requestHandler,
+            SimpleInjectorEventHandlerScopeProvider scopeProvider) : base(scopeProvider)
+        {
+            _requestHandler = requestHandler;
+        }
+
+        private readonly IRequestProcessor _requestHandler;
+
+        async Task Navigate()
+        {
+            await _requestHandler.Handle(new Request<Foo, Result<Foo>>
+            {
+                Model = new Foo()
+                {
+                    SomeProperty = "test"
+                }
+            });
         }
     }
 }
